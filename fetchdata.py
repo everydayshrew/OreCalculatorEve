@@ -19,17 +19,20 @@ Mercoxit - 1136
 
 from bs4 import BeautifulSoup
 import os
+import sys
 import datetime
 import urllib2
 
 #-----------------------------------------------------
 # First Intilization
+firstTime = True
 try:
-    with open('pulledvals.txt'): pass
+    with open('pulledvals.dat'): firstTime = False
 except IOError:
-    dataFile = open('pulledvals.txt', 'w')
+    dataFile = open('pulledvals.dat', 'w')
     dataFile.writelines("0 0 0 0 0")
     dataFile.close()
+
 
 # Mineral Names.
 Mnames = ("Tritanium", "Pyerite", "Mexallon", "Isogen", "Nocxium", "Zydrine", 
@@ -53,7 +56,7 @@ def checkDate(day, month, year, hour):
         return True
 
 def fetchDate():
-    dataFile = open("pulledvals.txt", "r")
+    dataFile = open("pulledvals.dat", "r")
     date = dataFile.readline()
     dataFile.close()
     parsedDate = date.split(" ")
@@ -62,8 +65,9 @@ def fetchDate():
 
 # Pull loaded file
 def fetchData(forced):
+    custvals = True
     datelist = fetchDate() 
-    dataFile = open("pulledvals.txt", "r")
+    dataFile = open("pulledvals.dat", "r")
     vals = dataFile.readline()
 
     # If date is recent 24 hours, pull from file.
@@ -82,25 +86,42 @@ def fetchData(forced):
     else:
         print "Updating Values from Eve-Central"
         address = "http://api.eve-central.com/api/marketstat?usesystem=30000142&typeid=34&typeid=35&typeid=36&typeid=37&typeid=38&typeid=39&typeid=40&typeid=11399&typeid=1230&typeid=1228&typeid=1224&typeid=18&typeid=1227&typeid=20&typeid=1226&typeid=1231&typeid=21&typeid=1229&typeid=1232&typeid=1225&typeid=19&typeid=1223&typeid=22&typeid=11396&typeid=16274&typeid=17887&typeid=17888&typeid=17889&typeid=16273&typeid=16272&typeid=16275&typeid=16267&typeid=16263&typeid=16266&typeid=16265&typeid=16264&typeid=16262&typeid=16268&typeid=16269"
-        htmlPage = urllib2.urlopen(address)
-        htmlText = htmlPage.read()
-        mySoup = BeautifulSoup(htmlText)
-
-        dataFile = open("pulledvals.txt", "w")
-        values = []
-        temp = []
-        values = mySoup.find_all("avg")
-        for n in range(0,len(values)):
-            values[n] = str(values[n]).replace("<avg>","")
-            values[n] = str(values[n]).replace("</avg>","")
-            values[n] = float(values[n])
-        now = datetime.datetime.now()
-        lines = [str(now.month)+" ", str(now.day)+" ", str(now.year)+" ", \
-                 str(now.hour)+" ", str(now.minute), "\n", str(values)]
-        dataFile.writelines(lines)
-        dataFile.close()
-
-    print "Market data has been loaded."
+        try:
+            htmlPage = urllib2.urlopen(address)
+            htmlText = htmlPage.read()
+            mySoup = BeautifulSoup(htmlText)
+            dataFile = open("pulledvals.dat", "w")
+            values = []
+            temp = []
+            values = mySoup.find_all("avg")
+            for n in range(0,len(values)):
+                values[n] = str(values[n]).replace("<avg>","")
+                values[n] = str(values[n]).replace("</avg>","")
+                values[n] = float(values[n])
+            now = datetime.datetime.now()
+            lines = [str(now.month)+" ", str(now.day)+" ", str(now.year)+" ", \
+                     str(now.hour)+" ", str(now.minute), "\n", str(values)]
+            dataFile.writelines(lines)
+            dataFile.close()
+            print "Market data has been loaded."
+        except:
+            if not firstTime:
+                print "Unable to connect to Eve-central, using last known values."
+                dataFile = open("pulledvals.dat", "r")
+                vals = dataFile.readline()
+                vals = dataFile.readline()
+                dataFile.close()
+                vals = vals.replace("[","")
+                vals = vals.replace("]","")
+                values = vals.split(",")
+                try:
+                    for n in range(0,len(values)): values[n] = float(values[n])
+                except:
+                    print "Last values are corrupted.  Please delete the pulledvals.dat\nfile and restart OEYC while connected to the internet."
+                    return -2
+            else:
+                print "Unable to connect to Eve-central.  You must be on the internet\nwhen running this program for the first time."
+                return -1
 
     # Now the file is loaded!  Now we use it!
     # Dictionary Holding all Ore Asteroid Information
@@ -212,7 +233,7 @@ def fetchData(forced):
     marketvals = {"Ore": {}, "Ice": {}}
 
     # Check if there is already a saved custom value file
-    custvals = True
+    
     try:
         with open('customvals.txt'): pass
     except IOError:

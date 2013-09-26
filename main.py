@@ -7,7 +7,7 @@ from wx.lib.mixins.listctrl import ColumnSorterMixin
 from fetchdata import fetchData
 from fetchdata import fetchDate
 
-importedData = fetchData(0)
+
 
 ########################################################################
 # For some odd reason, SortedListCtrl won't be able sort if it doesn't have
@@ -710,19 +710,28 @@ class MyForm(wx.Frame):
 
     #-----
     def about(self, e):
-        about = 'Obscenely Elaborate Yield Calculator is a simple Mining-Aid for\nEveOnline players.  It is for free use and open-source for the\ncommunity, as long as the original creator is credited.\n\nPlease feel free to email suggestions!\n\n\nVersion: 1.0.0.1\nAuthor: Oey\nCode: python/wxpython\nDate: 9-25-2013\nEmail: everydayshrew@gmail.com'
+        about = 'Obscenely Elaborate Yield Calculator is a simple Mining-Aid for\nEveOnline players.  It is for free use and open-source for the\ncommunity, as long as the original creator is credited.\n\nPlease feel free to email suggestions!\n\n\nVersion: 1.0.0.2\nAuthor: Oey\nCode: python/wxpython\nDate: 9-25-2013\nEmail: everydayshrew@gmail.com'
         warn = wx.MessageDialog(None, about, '', wx.OK)
         ret = warn.ShowModal()
 
         if ret == wx.ID_OK:
-            warn.Destroy()  
+            warn.Destroy()
 
-        
+            
+    
  
  
 # Run the program
 if __name__ == "__main__":
     app = wx.App(False)
-    frame = MyForm()
-    frame.Show()
-    app.MainLoop()
+    importedData = fetchData(0)
+    if importedData == -1:
+        warn = wx.MessageDialog(None, "You must be connected to the internet to initialize \nthis program for the first time.", 'Error Code: 1', wx.OK)
+        ret = warn.ShowModal()
+    elif importedData == -2:
+        warn = wx.MessageDialog(None, "pulledvals.dat file has been corrupted.  Delete the file and\nrun the program again while connected to the internet.", 'Error Code: 2', wx.OK)
+        ret = warn.ShowModal()
+    else:
+        frame = MyForm()
+        frame.Show()
+        app.MainLoop()
