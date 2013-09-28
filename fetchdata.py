@@ -64,7 +64,7 @@ def fetchDate():
     return parsedDate
 
 # Pull loaded file
-def fetchData(forced):
+def fetchData(forced, region):
     custvals = True
     datelist = fetchDate() 
     dataFile = open("pulledvals.dat", "r")
@@ -85,7 +85,10 @@ def fetchData(forced):
     # If data is outdated.  Pull from site, store in file.
     else:
         print "Updating Values from Eve-Central"
-        address = "http://api.eve-central.com/api/marketstat?usesystem=30000142&typeid=34&typeid=35&typeid=36&typeid=37&typeid=38&typeid=39&typeid=40&typeid=11399&typeid=1230&typeid=1228&typeid=1224&typeid=18&typeid=1227&typeid=20&typeid=1226&typeid=1231&typeid=21&typeid=1229&typeid=1232&typeid=1225&typeid=19&typeid=1223&typeid=22&typeid=11396&typeid=16274&typeid=17887&typeid=17888&typeid=17889&typeid=16273&typeid=16272&typeid=16275&typeid=16267&typeid=16263&typeid=16266&typeid=16265&typeid=16264&typeid=16262&typeid=16268&typeid=16269"
+        if region == "":
+            address = "http://api.eve-central.com/api/marketstat?usesystem=30000142&typeid=34&typeid=35&typeid=36&typeid=37&typeid=38&typeid=39&typeid=40&typeid=11399&typeid=1230&typeid=1228&typeid=1224&typeid=18&typeid=1227&typeid=20&typeid=1226&typeid=1231&typeid=21&typeid=1229&typeid=1232&typeid=1225&typeid=19&typeid=1223&typeid=22&typeid=11396&typeid=16274&typeid=17887&typeid=17888&typeid=17889&typeid=16273&typeid=16272&typeid=16275&typeid=16267&typeid=16263&typeid=16266&typeid=16265&typeid=16264&typeid=16262&typeid=16268&typeid=16269"
+        else:
+            address = "http://api.eve-central.com/api/marketstat?usesystem="+region+"&typeid=34&typeid=35&typeid=36&typeid=37&typeid=38&typeid=39&typeid=40&typeid=11399&typeid=1230&typeid=1228&typeid=1224&typeid=18&typeid=1227&typeid=20&typeid=1226&typeid=1231&typeid=21&typeid=1229&typeid=1232&typeid=1225&typeid=19&typeid=1223&typeid=22&typeid=11396&typeid=16274&typeid=17887&typeid=17888&typeid=17889&typeid=16273&typeid=16272&typeid=16275&typeid=16267&typeid=16263&typeid=16266&typeid=16265&typeid=16264&typeid=16262&typeid=16268&typeid=16269"
         try:
             htmlPage = urllib2.urlopen(address)
             htmlText = htmlPage.read()

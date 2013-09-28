@@ -1,2 +1,7 @@
+v. 1.0.1.3	9/28/2013
+Added safeguards when not connected online
+Added ability to keep settings
+Added region list.
+
 v. 1.0.0.1	9/25/2013
 Initial Build

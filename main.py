@@ -33,9 +33,8 @@ class PanelOne(wx.Panel):
         wx.Panel.__init__(self, parent=parent)
 
         # Status Box
-        
+        self.Bind(wx.EVT_ENTER_WINDOW, self.WidgetExit)
        
-
         ## Flavor Boxes
         wx.StaticBox(self, label='Mining Style', pos=(10,5), size=(330,220))
         wx.StaticBox(self, label='Advanced Options', pos=(350,5), size=(270,220))
@@ -249,7 +248,10 @@ class PanelOne(wx.Panel):
         e.Skip()
 
     def WidgetExit(self, e):
-        self.GetParent().sb.SetStatusText(self.GetParent().date)
+        self.GetParent().sb.SetStatusText(self.GetParent().date \
+                    + "\t                                                                                                                                                                    Region: " +
+                    self.GetParent().fetch_region_name())
+        #self.GetParent().settings_save()
         e.Skip()
 
     def warning(self):
@@ -269,6 +271,9 @@ class PanelTwo(wx.Panel):
     def __init__(self, parent):
         """Constructor"""
         wx.Panel.__init__(self, parent=parent)
+
+        # Status Box
+        self.Bind(wx.EVT_ENTER_WINDOW, self.WidgetExit)
 
         ## Flavor Boxes
         wx.StaticBox(self, label='Mining Style', pos=(10,5), size=(330,220))
@@ -422,7 +427,9 @@ class PanelTwo(wx.Panel):
         e.Skip()
 
     def WidgetExit(self, e):
-        self.GetParent().sb.SetStatusText(self.GetParent().date)
+        self.GetParent().sb.SetStatusText(self.GetParent().date \
+                    + "\t                                                                                                                                                                    Region: " +
+                    self.GetParent().fetch_region_name())
         e.Skip()
 
     def warning(self):
@@ -504,7 +511,7 @@ class PanelFour(wx.Panel):
 
     def resVals(self, e):
         temp = []
-        dataFile = open("pulledvals.txt", "r")
+        dataFile = open("pulledvals.dat", "r")
         temp = dataFile.readline()
         temp = dataFile.readline()
         dataFile.close()
@@ -528,7 +535,9 @@ class PanelFour(wx.Panel):
         e.Skip()
 
     def WidgetExit(self, e):
-        self.GetParent().sb.SetStatusText(self.GetParent().date)
+        self.GetParent().sb.SetStatusText(self.GetParent().date \
+                    + "\t                                                                                                                                                                    Region: " +
+                    self.GetParent().fetch_region_name())
         e.Skip()
 
     def warning(self):
@@ -583,8 +592,9 @@ class MyForm(wx.Frame):
 
         marketMenu = wx.Menu()
         marketSubMenu = wx.Menu()
+        market_submenu_2 = wx.Menu()
         option_update = marketMenu.Append(wx.ID_ANY, "Force Update Market Prices", "")
-        self.Bind(wx.EVT_TOOL, self.Update, option_update)
+        self.Bind(wx.EVT_TOOL, lambda evt: self.Update(evt, ""), option_update)
         
         self.rss = marketSubMenu.Append(wx.ID_ANY, "Sell Ore for Maximized Profits",
                                        '', kind=wx.ITEM_RADIO)
@@ -599,6 +609,31 @@ class MyForm(wx.Frame):
         self.cs = marketSubMenu.Append(wx.ID_ANY, "Use Custom Prices", '',
                                        kind=wx.ITEM_CHECK)
         marketMenu.AppendMenu(wx.ID_ANY, 'Selling Style', marketSubMenu)
+
+        self.jita = market_submenu_2.Append(wx.ID_ANY, "Jita", '',
+                                            kind=wx.ITEM_RADIO)
+        self.hek = market_submenu_2.Append(wx.ID_ANY, "Hek", '',
+                                            kind=wx.ITEM_RADIO)
+        self.rens = market_submenu_2.Append(wx.ID_ANY, "Rens", '',
+                                            kind=wx.ITEM_RADIO)
+        self.dodixie = market_submenu_2.Append(wx.ID_ANY, "Dodixie", '',
+                                            kind=wx.ITEM_RADIO)
+        self.amarr = market_submenu_2.Append(wx.ID_ANY, "Amarr", '',
+                                            kind=wx.ITEM_RADIO)
+        marketMenu.AppendMenu(wx.ID_ANY, 'Region', market_submenu_2)
+
+        self.Bind(wx.EVT_TOOL, lambda evt: self.Update(evt, "Jita"),
+                  self.jita)
+        self.Bind(wx.EVT_TOOL, lambda evt: self.Update(evt, "Hek"),
+                  self.hek)
+        self.Bind(wx.EVT_TOOL, lambda evt: self.Update(evt, "Rens"),
+                  self.rens)
+        self.Bind(wx.EVT_TOOL, lambda evt: self.Update(evt, "Dodixie"),
+                  self.dodixie)
+        self.Bind(wx.EVT_TOOL, lambda evt: self.Update(evt, "Amarr"),
+                  self.amarr)
+        
+        
         
         option_set = marketMenu.Append(wx.ID_ANY, "Set Prices Manually", "")
         self.Bind(wx.EVT_TOOL, lambda evt: self.onSwitchPanels(evt, 4), option_set) 
@@ -611,6 +646,20 @@ class MyForm(wx.Frame):
         option_exit = helpMenu.Append(wx.ID_EXIT, "Exit")
         self.Bind(wx.EVT_MENU, self.OnQuit, option_exit)
         menubar.Append(helpMenu, '&Other')
+
+        #--- Load Settings
+        # Figure how to put this in its own function
+        settings = self.settings_load()
+        marketSubMenu.Check(self.rfs.GetId(), True if settings[0]=="True" else False)
+        marketSubMenu.Check(self.rss.GetId(), True if settings[1]=="True" else False)
+        marketSubMenu.Check(self.fs.GetId(), True if settings[2]=="True" else False)
+        marketSubMenu.Check(self.ss.GetId(), True if settings[3]=="True" else False)
+        marketSubMenu.Check(self.cs.GetId(), True if settings[4]=="True" else False)
+        if settings[5] == "Hek": market_submenu_2.Check(self.hek.GetId(), True)
+        elif settings[5] == "Rens": market_submenu_2.Check(self.rens.GetId(), True)
+        elif settings[5] == "Dodixie": market_submenu_2.Check(self.dodixie.GetId(), True)
+        elif settings[5] == "Amarr": market_submenu_2.Check(self.amarr.GetId(), True)
+        else: market_submenu_2.Check(self.jita.GetId(), True)
         
         self.SetMenuBar(menubar)
 
@@ -626,6 +675,8 @@ class MyForm(wx.Frame):
         self.Bind(wx.EVT_TOOL, lambda evt: self.onSwitchPanels(evt, 3), gas_bar)
         toolbar.Realize()
         self.Center()
+
+        self.Bind(wx.EVT_CLOSE, self.OnQuit)
 
     #----------------------------------------------------------------------
     # This function will return the proper data segment used in calculations
@@ -675,25 +726,25 @@ class MyForm(wx.Frame):
     def onSwitchPanels(self, Event, value):
         """"""
         if value == 1:
-            self.SetTitle("Obscenely Elaborate Yield Calculator")
+            #self.SetTitle("Obscenely Elaborate Yield Calculator")
             self.panel_one.Show()
             self.panel_two.Hide()
             self.panel_three.Hide()
             self.panel_four.Hide()
         elif value == 2:
-            self.SetTitle("Obscenely Elaborate Yield Calculator")
+            #self.SetTitle("Obscenely Elaborate Yield Calculator")
             self.panel_one.Hide()
             self.panel_two.Show()
             self.panel_three.Hide()
             self.panel_four.Hide()
         elif value == 3:
-            self.SetTitle("Obscenely Elaborate Yield Calculator")
+            #self.SetTitle("Obscenely Elaborate Yield Calculator")
             self.panel_one.Hide()
             self.panel_two.Hide()
             self.panel_three.Show()
             self.panel_four.Hide()
         else:
-            self.SetTitle("Obscenely Elaborate Yield Calculator")
+            #self.SetTitle("Obscenely Elaborate Yield Calculator")
             self.panel_one.Hide()
             self.panel_two.Hide()
             self.panel_three.Hide()
@@ -702,21 +753,71 @@ class MyForm(wx.Frame):
 
     #-----
     def OnQuit(self, event):
-        self.Close()
+        self.settings_save()
+        self.Destroy()
 
     #-----
-    def Update(self, event):
-        fetchData(1)
+    def Update(self, event, region):
+        fetchData(1, str(self.fetch_region_numb(region)))
 
     #-----
     def about(self, e):
-        about = 'Obscenely Elaborate Yield Calculator is a simple Mining-Aid for\nEveOnline players.  It is for free use and open-source for the\ncommunity, as long as the original creator is credited.\n\nPlease feel free to email suggestions!\n\n\nVersion: 1.0.0.2\nAuthor: Oey\nCode: python/wxpython\nDate: 9-25-2013\nEmail: everydayshrew@gmail.com'
+        about = 'Obscenely Elaborate Yield Calculator is a "simple" Mining-Aid for\nEveOnline players.  It is for free use and open-source for the\ncommunity, as long as the original creator is credited.\n\nPlease feel free to email suggestions!\n\n\nVersion: 1.0.1.3\nAuthor: Oey\nCode: python/wxpython\nDate: 9-25-2013\nEmail: everydayshrew@gmail.com'
         warn = wx.MessageDialog(None, about, '', wx.OK)
         ret = warn.ShowModal()
 
         if ret == wx.ID_OK:
             warn.Destroy()
 
+    #-----
+    def fetch_region_name(self):
+        if self.jita.IsChecked(): return "Jita"
+        if self.hek.IsChecked(): return "Hek"
+        if self.rens.IsChecked(): return "Rens"
+        if self.dodixie.IsChecked(): return "Dodixie"
+        if self.amarr.IsChecked(): return "Amarr"
+
+    #-----
+    def fetch_region_numb(self, region):
+        if region == "Jita": return "30000142"
+        elif region == "Hek": return "30002053"
+        elif region == "Rens": return "30002510"
+        elif region == "Dodixie": return "30002659"
+        else: return "30002187"
+
+    #-----
+    def settings_save(self):
+        setfile = []
+        setfile.append(self.rfs.IsChecked())
+        setfile.append(self.rss.IsChecked())
+        setfile.append(self.fs.IsChecked())
+        setfile.append(self.ss.IsChecked())
+        setfile.append(self.cs.IsChecked())
+        setfile.append(self.fetch_region_name())
+        settings_file = open("settings.dat", "w")
+        settings_file.writelines(str(setfile))
+        settings_file.close()
+
+    #-----
+    def settings_load(self):
+        try:
+            settings_file = open("settings.dat", "r")
+        except:
+            self.settings_save()
+            settings_file = open("settings.dat", "r")
+
+        settings = settings_file.readline()
+        settings_file.close()
+        settings = settings.replace("[","")
+        settings = settings.replace("]","")
+        settings = settings.replace(" ","")
+        settings = settings.replace("'","")
+        settings_list = settings.split(",")
+        #print settings_list
+        return settings_list
+        
+        
+        
             
     
  
@@ -724,7 +825,7 @@ class MyForm(wx.Frame):
 # Run the program
 if __name__ == "__main__":
     app = wx.App(False)
-    importedData = fetchData(0)
+    importedData = fetchData(0, "")
     if importedData == -1:
         warn = wx.MessageDialog(None, "You must be connected to the internet to initialize \nthis program for the first time.", 'Error Code: 1', wx.OK)
         ret = warn.ShowModal()
