@@ -2,27 +2,32 @@ import wx
 import sys
 import math
 import time
+import random
 import wx.grid as gridlib
 from wx.lib.mixins.listctrl import ColumnSorterMixin
 from fetchdata import fetchData
 from fetchdata import fetchDate
 
-
+def mag(base, power):
+    # Returns base * 10^power
+    return base * math.pow(10, power)
 
 ########################################################################
 # For some odd reason, SortedListCtrl won't be able sort if it doesn't have
 # Sample data beforehand.  So I just stuck some values.  
-output = {1: ('Pyroxeres', 183.63, 222.59, '0', '0', '0'), 2: ('Kernite', 187.02, 210.63, '0', '0', '0'), 3: ('Veldspar', 161.2, 159.46, '0', '0', '0'), 4: ('Plagioclase', 159.74, 190.96, '0', '0', '0'), 5: ('Hemorphite', 544.28, 306.4, '0', '0', '0'), 6: ('Spodumain', 373.27, 217.27, '0', '0', '0'), 7: ('Crokite', 252.1, 301.74, '0', '0', '0'), 8: ('Arkonor', 241.69, 348.98, '0', '0', '0'), 9: ('Gneiss', 301.02, 252.84, '0', '0', '0'), 10: ('Jaspet', 223.81, 276.76, '0', '0', '0'), 11: ('Hedbergite', 266.84, 390.96, '0', '0', '0'), 12: ('Dark Ochre', 1534.01, 270.89, '0', '0', '0'), 13: ('Scordite', 182.6, 197.74, '0', '0', '0'), 14: ('Bistot', 249.75, 254.24, '0', '0', '0'), 15: ('Omber', 165.12, 159.86, '0', '0', '0'), 16: ('Mercoxit', 540.87, 493.66, '0', '0', '0')}
-
 class SortedListCtrl(wx.ListCtrl, ColumnSorterMixin):
-    def __init__(self, parent):
+    def __init__(self, parent, output):
+
+        if not output:
+            output = {1: ('Pyroxeres', 183.63, 222.59, '0', '0', '0'), 2: ('Kernite', 187.02, 210.63, '0', '0', '0'), 3: ('Veldspar', 161.2, 159.46, '0', '0', '0'), 4: ('Plagioclase', 159.74, 190.96, '0', '0', '0'), 5: ('Hemorphite', 544.28, 306.4, '0', '0', '0'), 6: ('Spodumain', 373.27, 217.27, '0', '0', '0'), 7: ('Crokite', 252.1, 301.74, '0', '0', '0'), 8: ('Arkonor', 241.69, 348.98, '0', '0', '0'), 9: ('Gneiss', 301.02, 252.84, '0', '0', '0'), 10: ('Jaspet', 223.81, 276.76, '0', '0', '0'), 11: ('Hedbergite', 266.84, 390.96, '0', '0', '0'), 12: ('Dark Ochre', 1534.01, 270.89, '0', '0', '0'), 13: ('Scordite', 182.6, 197.74, '0', '0', '0'), 14: ('Bistot', 249.75, 254.24, '0', '0', '0'), 15: ('Omber', 165.12, 159.86, '0', '0', '0'), 16: ('Mercoxit', 540.87, 493.66, '0', '0', '0')}
+
         wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT, size=(580,-1))
         ColumnSorterMixin.__init__(self, len(output))
         self.itemDataMap = output
-
+        
     def GetListCtrl(self):
         return self
- 
+
 ########################################################################
 class PanelOne(wx.Panel):
     """"""
@@ -79,20 +84,26 @@ class PanelOne(wx.Panel):
   
         # Core: Advanced Options
         self.ferry_cb = wx.CheckBox(self, label='Cargohold Mining (Ferrying)',
-                                       pos=(360, 40))
-        self.ferry_time = wx.TextCtrl(self, size=(50,-1), pos=(510,60),
+                                       pos=(360, 30))
+        self.ferry_time = wx.TextCtrl(self, size=(50,-1), pos=(510,50),
                                      value='180', style=wx.TE_RIGHT)
-        self.ferry_st1 = wx.StaticText(self, label='seconds', pos=(565,65))
-        self.ferry_st2 = wx.StaticText(self, label='Average time per trip:', pos=(390,65))
-        self.ferry_st3 = wx.StaticText(self, label='Cargo Size:', pos=(390,95))
-        self.ferry_cargo = wx.TextCtrl(self, size=(75,-1), pos=(485,90),
+        self.ferry_st1 = wx.StaticText(self, label='seconds', pos=(565,55))
+        self.ferry_st2 = wx.StaticText(self, label='Average time per trip:', pos=(390,55))
+        self.ferry_st3 = wx.StaticText(self, label='Cargo Size:', pos=(390,80))
+        self.ferry_cargo = wx.TextCtrl(self, size=(75,-1), pos=(485,75),
                                        value='1000')
-        self.ferry_st4 = wx.StaticText(self, label='m^3', pos=(565,95))
-        self.orca_cb = wx.CheckBox(self, label='Recieving Orca Bonuses', pos=(360, 150))
-        self.orca_time = wx.TextCtrl(self, size=(50,-1), pos=(510,170),
+        self.ferry_st4 = wx.StaticText(self, label='m^3', pos=(565,80))
+        self.orca_cb = wx.CheckBox(self, label='Recieving Orca Bonuses', pos=(360, 100))
+        self.orca_time = wx.TextCtrl(self, size=(50,-1), pos=(510,120),
                                      value='60')
-        self.orca_st1 = wx.StaticText(self, label='Mining Cycle Time:', pos=(390,175))
-        self.orca_st2 = wx.StaticText(self, label='seconds', pos=(565,175))
+        self.orca_st1 = wx.StaticText(self, label='Mining Cycle Time:', pos=(390,125))
+        self.orca_st2 = wx.StaticText(self, label='seconds', pos=(565,125))
+        self.refine_cb = wx.CheckBox(self, label='Set Refining Rate', pos=(360, 160))
+        self.refine_amt = wx.TextCtrl(self, size=(50,-1), pos=(510,155),value=('100'),
+                                      style=wx.TE_RIGHT)
+        self.refine_st1 = wx.StaticText(self, label='%', pos=(565,160))
+        self.heur_cb = wx.CheckBox(self, label='Use Asteroid Heuristic Algorithms', pos=(360,195))
+                                   
 
         # Core Hiding: Advanced Options Box
         self.ferry_time.Hide()
@@ -101,27 +112,35 @@ class PanelOne(wx.Panel):
         self.ferry_st3.Hide()
         self.ferry_st4.Hide()
         self.ferry_cargo.Hide()
-
         self.orca_st1.Hide()
         self.orca_st2.Hide()
         self.orca_time.Hide()
+        self.refine_amt.Hide()
+        self.refine_st1.Hide()
 
         # Button Bindings: Advanced Options
         self.ferry_cb.Bind(wx.EVT_CHECKBOX, self.toggleCargoMining)
         self.orca_cb.Bind(wx.EVT_CHECKBOX, self.toggleOrcaBonuses)
+        self.refine_cb.Bind(wx.EVT_CHECKBOX, self.toggleRefine)
         self.ferry_cb.Bind(wx.EVT_ENTER_WINDOW,
-                               lambda evt: self.OnWidgetEnter(evt, "Check this if you're returning to a station after cargohold is filled"))
+                               lambda evt: self.OnWidgetEnter(evt, "Check this if you're returning to a station after cargohold is filled."))
         self.orca_cb.Bind(wx.EVT_ENTER_WINDOW,
                                lambda evt: self.OnWidgetEnter(evt, "Check this if you're in a fleet with an orca."))
+        self.refine_cb.Bind(wx.EVT_ENTER_WINDOW,
+                               lambda evt: self.OnWidgetEnter(evt, "Check this if you're not 100% perfect in refining ice/ore."))
+        self.heur_cb.Bind(wx.EVT_ENTER_WINDOW,
+                               lambda evt: self.OnWidgetEnter(evt, "Check this if you're anticipating incomplete cycles due to asteroids popping."))                           
         self.ferry_cb.Bind(wx.EVT_LEAVE_WINDOW, self.WidgetExit)
         self.orca_cb.Bind(wx.EVT_LEAVE_WINDOW, self.WidgetExit)
+        self.refine_cb.Bind(wx.EVT_LEAVE_WINDOW, self.WidgetExit)
+        self.heur_cb.Bind(wx.EVT_LEAVE_WINDOW, self.WidgetExit)                           
 
         # Core: Results
         self.vbox = wx.BoxSizer(wx.VERTICAL)
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox.Add((-1,260))
         self.hbox.Add((25,285))
-        self.dataOutput = SortedListCtrl(self)
+        self.dataOutput = SortedListCtrl(self, 0)
         self.dataOutput.InsertColumn(0, 'Asteroid Name', wx.LIST_FORMAT_RIGHT, width=100)
         self.dataOutput.InsertColumn(1, 'Raw Value', wx.LIST_FORMAT_RIGHT, width=95)
         self.dataOutput.InsertColumn(2, 'Refined Value',wx.LIST_FORMAT_RIGHT, width=95)
@@ -133,7 +152,7 @@ class PanelOne(wx.Panel):
         self.SetSizer(self.vbox, 0)
 
         self.Show(True)
-
+        
     def hideStripInfo(self, e):
         self.L_strip_st1.Hide()
         self.L_strip_laseramount.Hide()
@@ -172,13 +191,30 @@ class PanelOne(wx.Panel):
             self.orca_st2.Hide()
             self.orca_time.Hide()
 
+    def toggleRefine(self, e):
+        if self.refine_cb.GetValue():
+            self.refine_amt.Show()
+            self.refine_st1.Show()
+        else:
+            self.refine_amt.Hide()
+            self.refine_st1.Hide()
+
     def calcVals(self, e):
          valid = True
          time = 0
          ptime = 0
+         r_perc = 1
          
          data = self.GetParent().queryOptions(self, "Ore")
-         #print data
+
+         # Check Refine Status
+         if self.refine_cb.GetValue():
+             try:
+                r_perc = float(self.refine_amt.GetValue()) / 100
+             except ValueError:
+                valid = False
+
+         # Check Ferry Status
          if self.ferry_cb.GetValue():
             try:
                 ftime = float(self.ferry_time.GetValue())
@@ -189,6 +225,7 @@ class PanelOne(wx.Panel):
             ftime = 0.0
             cargo = 1.0
 
+         # Check Orca Status
          if self.orca_cb.GetValue():
             try:
                 time = float(self.orca_time.GetValue())
@@ -205,6 +242,8 @@ class PanelOne(wx.Panel):
             else:
                 time = 180.0
                 ptime = 180.0
+
+         # Check Mining Style Status
          try:
              if self.L_mining_btn.GetValue():
                 yieldamt = float(self.yieldamount.GetValue()) * float(self.L_mining_laseramount.GetValue())
@@ -215,34 +254,88 @@ class PanelOne(wx.Panel):
 
          if yieldamt<=0: valid = False
 
-         if valid:  
+         if valid:
+             #Advanced Heuristics:
+             if self.heur_cb.GetValue() and float(self.yieldamount.GetValue()) > 100:
+                 y_amt = float(self.yieldamount.GetValue())
+                 cycle = 20.0
+                 extra_time = 0.0
+                 if self.L_mining_btn.GetValue(): cycle = 60.0
+                 cycle_amt = mag(-2.82281, -9) * math.pow(y_amt, 3) + \
+                             mag(1.93982, -5) * math.pow(y_amt, 2) - \
+                             0.0429479 * y_amt + 33.8916                             
+                 low = mag(4.18916, -9) * pow(y_amt, 3) + \
+                       mag(5.44406, -6) * pow(y_amt, 2) - \
+                       0.0662872 * y_amt + 107.495
+                 low = int(low)
+                 cycle = int(cycle / cycle_amt)
+                 for n in range(0,int(math.floor(cycle))):
+                     try:
+                         time_mod = 1 - random.randint(low,100)/100.0
+                     except ValueError:
+                         time_mod = random.random()
+                     extra_time += time * time_mod
+
+             else:
+                 extra_time = 0
+
+                 
              rate = round(cargo / (((cargo/yieldamt)*time) + ftime),2)
              prate = round((yieldamt / ptime),2)
 
              i = 1
              output = {}
+             #print r_perc
              for key in data:
-                isk = round(rate*data[key][2],2)
-                output[i] = (data[key][0], '{0:.2f}'.format(data[key][1]), '{0:.2f}'.format(data[key][2]), '{0:,.2f}'.format(isk),
-                            '{0:,.2f}'.format(3600*isk), '{0:.2f}%'.format(rate/prate * 100))
+                if data[key][1] > data[key][2] * r_perc:
+                    isk = round(rate*data[key][1],2)
+                else:
+                    isk = round(rate*data[key][2],2) * r_perc
+                # Heuristic Error Checking of +- 5%
+                extra_time_mod = random.randint(int(extra_time - extra_time*0.05),
+                                                int(extra_time + extra_time*0.05))
+                isk_per_hour = round((3600-extra_time_mod)*isk,2)
+                eff = (isk_per_hour/(isk*3600) * 100) * rate/prate
+                output[i] = (data[key][0], data[key][1],
+                             data[key][2]*r_perc, isk, isk_per_hour, eff)
                 i += 1
+
+             # Workaround for .Destroy().  Deletes the last table such
+             # that a new key can be generated in order for sorting to
+             # work correctly.
+             self.dataOutput.Hide()
+             self.dataOutput.Close()
+
+             self.dataOutput = SortedListCtrl(self, output)
+             self.dataOutput.InsertColumn(0, 'Asteroid Name', wx.LIST_FORMAT_RIGHT, width=100)
+             self.dataOutput.InsertColumn(1, 'Raw Value', wx.LIST_FORMAT_RIGHT, width=95)
+             self.dataOutput.InsertColumn(2, 'Refined Value',wx.LIST_FORMAT_RIGHT, width=95)
+             self.dataOutput.InsertColumn(3, 'Isk/s', wx.LIST_FORMAT_RIGHT, width=85)
+             self.dataOutput.InsertColumn(4, 'Isk/hr', wx.LIST_FORMAT_RIGHT, width=106)
+             self.dataOutput.InsertColumn(5, 'Efficency', wx.LIST_FORMAT_RIGHT, width=75)
+             self.hbox.Add(self.dataOutput,0,wx.EXPAND)
+             self.Layout()
 
              ## Clear list data
              self.dataOutput.DeleteAllItems()
 
              ## Write new data
              items = output.items()
+             
              for key, ext in items:
                  index = self.dataOutput.InsertStringItem(sys.maxint, ext[0])
-                 self.dataOutput.SetStringItem(index, 1, str(ext[1]))
-                 self.dataOutput.SetStringItem(index, 2, str(ext[2]))
-                 self.dataOutput.SetStringItem(index, 3, str(ext[3]))
-                 self.dataOutput.SetStringItem(index, 4, str(ext[4]))
-                 self.dataOutput.SetStringItem(index, 5, str(ext[5]))
+                 if float(ext[1]) > float(ext[2]):
+                     self.dataOutput.SetItemTextColour(index, (255,0,0))
+                    
+                 self.dataOutput.SetStringItem(index, 1, '{0:.2f}'.format(ext[1]))
+                 self.dataOutput.SetStringItem(index, 2, '{0:.2f}'.format(ext[2]))
+                 self.dataOutput.SetStringItem(index, 3, '{0:,.2f}'.format(ext[3]))
+                 self.dataOutput.SetStringItem(index, 4, '{0:,.2f}'.format(ext[4]))
+                 self.dataOutput.SetStringItem(index, 5, '{0:.2f}%'.format(ext[5]))
                  self.dataOutput.SetItemData(index, key)
          else:
              self.warning()
-             
+            
     def OnWidgetEnter(self, e, string):
         self.GetParent().sb.SetStatusText(string)
         e.Skip()
@@ -251,7 +344,6 @@ class PanelOne(wx.Panel):
         self.GetParent().sb.SetStatusText(self.GetParent().date \
                     + "\t                                                                                                                                                                    Region: " +
                     self.GetParent().fetch_region_name())
-        #self.GetParent().settings_save()
         e.Skip()
 
     def warning(self):
@@ -285,7 +377,6 @@ class PanelTwo(wx.Panel):
                         pos=(135,45))
 
         # Core: Mining Style Box
-        #self.L_strip_btn = wx.RadioButton(self, pos=(130,35))
         self.L_strip_st1 = wx.StaticText(self, label='Count:', pos=(120, 115))
         self.L_strip_laseramount = wx.ComboBox(self, pos=(165, 110),
                                                choices=['1','2','3'],
@@ -297,7 +388,7 @@ class PanelTwo(wx.Panel):
         self.calculate_btn = wx.Button(self, label='Calculate', pos=(135,190))
 
         # Core Hiding: Mining Style Box
-
+        # Nothing to hide here!
 
         # Button Bindings: Mining Style Box
         self.calculate_btn.Bind(wx.EVT_BUTTON, self.calcVals)
@@ -337,7 +428,7 @@ class PanelTwo(wx.Panel):
         self.hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.vbox.Add((-1,260))
         self.hbox.Add((25,285))
-        self.dataOutput = SortedListCtrl(self)
+        self.dataOutput = SortedListCtrl(self, 0)
         self.dataOutput.InsertColumn(0, 'Asteroid Name', wx.LIST_FORMAT_RIGHT, width=100)
         self.dataOutput.InsertColumn(1, 'Raw Value', wx.LIST_FORMAT_RIGHT, width=95)
         self.dataOutput.InsertColumn(2, 'Refined Value',wx.LIST_FORMAT_RIGHT, width=95)
@@ -371,9 +462,7 @@ class PanelTwo(wx.Panel):
          valid = True
          time = 0
          
-         
          data = self.GetParent().queryOptions(self, "Ice")
-         #print data
          if self.ferry_cb.GetValue():
             try:
                 ftime = float(self.ferry_time.GetValue())
@@ -395,29 +484,48 @@ class PanelTwo(wx.Panel):
          if valid:
              rate = round((cargo / (((cargo/yieldamt)*time) + ftime))/ 1000,5) 
              prate = round((yieldamt / 1000 / time),5)
-
-             #print "cargo: {}, rate: {}, prate: {}".format(cargo, rate, prate)
-
              i = 1
              output = {}
              for key in data:
                 isk = round(rate*data[key][2],2)
-                output[i] = (data[key][0], '{0:,.2f}'.format(data[key][1]), '{0:,.2f}'.format(data[key][2]), '{0:,.2f}'.format(isk),
-                            '{0:,.2f}'.format(3600*isk), '{0:.2f}%'.format(rate/prate * 100))
+                output[i] = (data[key][0], data[key][1], data[key][2], isk,
+                            3600*isk, rate/prate * 100)
                 i += 1
+
+        
+             # Workaround for .Destroy().  Deletes the last table such
+             # that a new key can be generated in order for sorting to
+             # work correctly.
+             self.dataOutput.Hide()
+             self.dataOutput.Close()
+
+             self.dataOutput = SortedListCtrl(self, output)
+             self.dataOutput.InsertColumn(0, 'Asteroid Name', wx.LIST_FORMAT_RIGHT, width=100)
+             self.dataOutput.InsertColumn(1, 'Raw Value', wx.LIST_FORMAT_RIGHT, width=95)
+             self.dataOutput.InsertColumn(2, 'Refined Value',wx.LIST_FORMAT_RIGHT, width=95)
+             self.dataOutput.InsertColumn(3, 'Isk/s', wx.LIST_FORMAT_RIGHT, width=85)
+             self.dataOutput.InsertColumn(4, 'Isk/hr', wx.LIST_FORMAT_RIGHT, width=106)
+             self.dataOutput.InsertColumn(5, 'Efficency', wx.LIST_FORMAT_RIGHT, width=75)
+             self.hbox.Add(self.dataOutput,0,wx.EXPAND)
+             self.Layout()
 
              ## Clear list data
              self.dataOutput.DeleteAllItems()
 
              ## Write new data
              items = output.items()
+             #print items
+             
              for key, ext in items:
                  index = self.dataOutput.InsertStringItem(sys.maxint, ext[0])
-                 self.dataOutput.SetStringItem(index, 1, str(ext[1]))
-                 self.dataOutput.SetStringItem(index, 2, str(ext[2]))
-                 self.dataOutput.SetStringItem(index, 3, str(ext[3]))
-                 self.dataOutput.SetStringItem(index, 4, str(ext[4]))
-                 self.dataOutput.SetStringItem(index, 5, str(ext[5]))
+                 if float(ext[1]) > float(ext[2]):
+                     self.dataOutput.SetItemTextColour(index, (255,0,0))
+                    
+                 self.dataOutput.SetStringItem(index, 1, '{0:.2f}'.format(ext[1]))
+                 self.dataOutput.SetStringItem(index, 2, '{0:.2f}'.format(ext[2]))
+                 self.dataOutput.SetStringItem(index, 3, '{0:,.2f}'.format(ext[3]))
+                 self.dataOutput.SetStringItem(index, 4, '{0:,.2f}'.format(ext[4]))
+                 self.dataOutput.SetStringItem(index, 5, '{0:.2f}%'.format(ext[5]))
                  self.dataOutput.SetItemData(index, key)
          else:
              self.warning()
@@ -580,15 +688,6 @@ class MyForm(wx.Frame):
         menubar = wx.MenuBar()
         
         fileMenu = wx.Menu()
-        
-        '''modeMenu = wx.Menu()
-        option_1 = modeMenu.Append(wx.ID_ANY, "Ore", "1")
-        option_2 = modeMenu.Append(wx.ID_ANY, "Ice", "2")
-        option_3 = modeMenu.Append(wx.ID_ANY, "Gas", "3")
-        self.Bind(wx.EVT_MENU, lambda evt: self.onSwitchPanels(evt, 1), option_1)
-        self.Bind(wx.EVT_MENU, lambda evt: self.onSwitchPanels(evt, 2), option_2)
-        self.Bind(wx.EVT_MENU, lambda evt: self.onSwitchPanels(evt, 3), option_3)
-        menubar.Append(modeMenu, '&Mode')'''
 
         marketMenu = wx.Menu()
         marketSubMenu = wx.Menu()
@@ -668,11 +767,11 @@ class MyForm(wx.Frame):
                                         'Ore Mining', 'Ore Mining')
         ice_bar = toolbar.AddSimpleTool(wx.ID_ANY, wx.Image('icons/strip_2.png').Rescale(32,32).ConvertToBitmap(),
                                         'Ice Mining', 'Ice Mining')
-        gas_bar = toolbar.AddSimpleTool(wx.ID_ANY, wx.Image('icons/gas.png').Rescale(32,32).ConvertToBitmap(),
-                                        'Gas Mining', 'Gas Mining')
+        #gas_bar = toolbar.AddSimpleTool(wx.ID_ANY, wx.Image('icons/gas.png').Rescale(32,32).ConvertToBitmap(),
+        #                                'Gas Mining', 'Gas Mining')
         self.Bind(wx.EVT_TOOL, lambda evt: self.onSwitchPanels(evt, 1), ore_bar)
         self.Bind(wx.EVT_TOOL, lambda evt: self.onSwitchPanels(evt, 2), ice_bar)
-        self.Bind(wx.EVT_TOOL, lambda evt: self.onSwitchPanels(evt, 3), gas_bar)
+        #self.Bind(wx.EVT_TOOL, lambda evt: self.onSwitchPanels(evt, 3), gas_bar)
         toolbar.Realize()
         self.Center()
 
@@ -762,7 +861,7 @@ class MyForm(wx.Frame):
 
     #-----
     def about(self, e):
-        about = 'Obscenely Elaborate Yield Calculator is a "simple" Mining-Aid for\nEveOnline players.  It is for free use and open-source for the\ncommunity, as long as the original creator is credited.\n\nPlease feel free to email suggestions!\n\n\nVersion: 1.0.1.3\nAuthor: Oey\nCode: python/wxpython\nDate: 9-25-2013\nEmail: everydayshrew@gmail.com'
+        about = 'Obscenely Elaborate Yield Calculator is a "simple" Mining-Aid for\nEveOnline players.  It is for free use and open-source for the\ncommunity, as long as the original creator is credited.\n\nPlease feel free to email suggestions!\n\n\nVersion: 1.0.2.0\nAuthor: Oey\nCode: python/wxpython\nDate: 9-25-2013\nEmail: everydayshrew@gmail.com'
         warn = wx.MessageDialog(None, about, '', wx.OK)
         ret = warn.ShowModal()
 
@@ -788,14 +887,25 @@ class MyForm(wx.Frame):
     #-----
     def settings_save(self):
         setfile = []
+        ore_settings = []
+        ice_settings = []
+        
+        # Fetch Main Settings
         setfile.append(self.rfs.IsChecked())
         setfile.append(self.rss.IsChecked())
         setfile.append(self.fs.IsChecked())
         setfile.append(self.ss.IsChecked())
         setfile.append(self.cs.IsChecked())
         setfile.append(self.fetch_region_name())
+
+        # Fetch 
+
+        # Write to file
         settings_file = open("settings.dat", "w")
-        settings_file.writelines(str(setfile))
+        try:
+            settings_file.writelines(str(setfile))
+        except:
+            pass
         settings_file.close()
 
     #-----
@@ -813,7 +923,6 @@ class MyForm(wx.Frame):
         settings = settings.replace(" ","")
         settings = settings.replace("'","")
         settings_list = settings.split(",")
-        #print settings_list
         return settings_list
         
         

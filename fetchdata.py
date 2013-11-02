@@ -55,6 +55,8 @@ def checkDate(day, month, year, hour):
     else:
         return True
 
+# Fetch date function, pulls from the saved file and parses it for this
+# program
 def fetchDate():
     dataFile = open("pulledvals.dat", "r")
     date = dataFile.readline()
@@ -107,7 +109,10 @@ def fetchData(forced, region):
             dataFile.writelines(lines)
             dataFile.close()
             print "Market data has been loaded."
+        # In the event that the file throws an exception when reading,
+        # infom the user of the error and close the program.
         except:
+            # Try to pull last well known file
             if not firstTime:
                 print "Unable to connect to Eve-central, using last known values."
                 dataFile = open("pulledvals.dat", "r")
